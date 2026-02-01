@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(mv:*)",
-      "Bash(git submodule add:*)"
+      "Bash(git submodule add:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

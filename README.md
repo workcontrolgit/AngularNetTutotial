@@ -4,6 +4,11 @@ This repository demonstrates the **Client, API Resource, and Token Service (CAT)
 
 **Repository**: https://github.com/workcontrolgit/AngularNetTutotial.git
 
+## Documentation
+
+- **[Complete Tutorial Series](TUTORIAL.md)** - Comprehensive guide covering architecture, features, benefits, and detailed component documentation
+- **[Developer Guide](CLAUDE.md)** - Technical reference for working with this codebase
+
 ## Repository Structure
 
 ```

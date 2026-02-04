@@ -6,8 +6,9 @@ This repository demonstrates the **Client, API Resource, and Token Service (CAT)
 
 ## Documentation
 
-- **[Complete Tutorial Series](TUTORIAL.md)** - Comprehensive guide covering architecture, features, benefits, and detailed component documentation
+- **[Complete Tutorial Series](docs/TUTORIAL.md)** - Comprehensive guide covering architecture, features, benefits, and detailed component documentation
 - **[Developer Guide](CLAUDE.md)** - Technical reference for working with this codebase
+- **[Setup Submodules Guide](SETUP-SUBMODULES.md)** - Git submodules setup instructions
 
 ## Repository Structure
 
@@ -205,7 +206,13 @@ If default ports are in use, update the configuration:
 
 ## Contributing
 
-[Specify contribution guidelines]
+Found an issue or want to improve the tutorials?
+
+1. **Report issues:** Open an issue in the repository
+2. **Suggest improvements:** Submit a pull request
+3. **Share feedback:** Let us know what's helpful or confusing
+
+We welcome contributions to improve documentation, fix bugs, add features, or enhance existing components.
 
 ## Contact
 

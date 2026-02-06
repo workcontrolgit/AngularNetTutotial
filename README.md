@@ -213,7 +213,3 @@ Found an issue or want to improve the tutorials?
 3. **Share feedback:** Let us know what's helpful or confusing
 
 We welcome contributions to improve documentation, fix bugs, add features, or enhance existing components.
-
-## Contact
-
-[Your contact information]

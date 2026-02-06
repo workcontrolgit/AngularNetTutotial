@@ -2,7 +2,7 @@
 
 ## Building Modern Web Applications with Angular, .NET, and OAuth 2.0
 
-**[← Back to Main Tutorial](../TUTORIAL.md)** | **[Next: Part 2 →](02-token-service-deep-dive.md)**
+**[Tutorial Home](TUTORIAL.md)** | **[Next: Part 2 →](02-token-service-deep-dive.md)**
 
 ---
 

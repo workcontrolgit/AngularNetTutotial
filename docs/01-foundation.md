@@ -8,8 +8,6 @@
 
 Welcome to this comprehensive tutorial series that demonstrates building a modern, secure web application using the **CAT (Client, API Resource, Token Service)** pattern. This pattern represents industry best practices for building scalable, maintainable, and secure enterprise applications.
 
-![CAT Pattern Architecture](https://via.placeholder.com/800x400?text=CAT+Pattern+Architecture)
-
 ---
 
 ## 📚 What You'll Learn

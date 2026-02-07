@@ -346,8 +346,8 @@ test.describe('Employee Management', () => {
 
     // Login
     await page.click('button:has-text("Login")');
-    await page.fill('input[name="username"]', 'alice');
-    await page.fill('input[name="password"]', 'Pass123$');
+    await page.fill('input[name="username"]', 'ashtyn1');
+    await page.fill('input[name="password"]', 'Pa$$word123');
     await page.click('button[type="submit"]');
 
     // Wait for redirect

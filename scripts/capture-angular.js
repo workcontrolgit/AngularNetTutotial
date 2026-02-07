@@ -3,7 +3,6 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-// Create angular images directory
 const imagesDir = path.join(__dirname, '..', 'docs', 'images', 'angular');
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true });
@@ -12,7 +11,7 @@ if (!fs.existsSync(imagesDir)) {
 async function captureAngularScreenshots() {
   const browser = await chromium.launch({
     headless: false,
-    slowMo: 1000,
+    slowMo: 800,
   });
 
   const context = await browser.newContext({
@@ -22,180 +21,298 @@ async function captureAngularScreenshots() {
 
   const page = await context.newPage();
 
-  try {
-    console.log('📸 Capturing Angular application screenshots...\n');
+  const userIconSelectors = [
+    'button:has(mat-icon:has-text("account_circle"))',
+    'button[aria-label*="user" i]',
+    'button[aria-label*="account" i]',
+    'button mat-icon:has-text("account_circle")',
+    'button mat-icon:has-text("person")',
+    'mat-toolbar button:last-child',
+  ];
 
-    // 1. Angular Login Page - User menu dropdown with Login link
-    console.log('1️⃣  Capturing Angular login page (user menu dropdown)...');
-    await page.goto('http://localhost:4200', {
-      waitUntil: 'networkidle',
-      timeout: 30000
-    });
-
-    await page.waitForTimeout(2000);
-
-    // Find and click the user icon in the upper right corner to open dropdown
-    console.log('   Looking for user icon in upper right corner...');
-
-    const userIconSelectors = [
-      'button[aria-label*="user" i]',
-      'button[aria-label*="account" i]',
-      'button mat-icon:has-text("account_circle")',
-      'button mat-icon:has-text("person")',
-      '.user-button',
-      '.account-button',
-      'button[mattooltip*="user" i]',
-      'button:has(mat-icon):has-text("account")',
-    ];
-
-    let userIconFound = false;
+  async function openUserMenu() {
     for (const selector of userIconSelectors) {
-      try {
-        const icon = await page.locator(selector).first();
-        if (await icon.count() > 0) {
-          console.log(`   Found user icon with selector: ${selector}`);
-          // Click instead of hover to open dropdown menu
-          await icon.click();
-          userIconFound = true;
-          break;
-        }
-      } catch (e) {
-        // Continue trying
+      const icon = page.locator(selector).first();
+      if (await icon.count() > 0) {
+        await icon.click({ timeout: 5000 });
+        await page.waitForTimeout(500);
+        return true;
       }
     }
+    return false;
+  }
 
-    if (!userIconFound) {
-      console.log('   ⚠️  Could not find user icon, trying generic button in header...');
-      // Try to find any button in the header/toolbar area
-      await page.locator('mat-toolbar button').last().click();
+  async function clickFirstAvailable(selectors) {
+    for (const selector of selectors) {
+      try {
+        const element = page.locator(selector).first();
+        if (await element.count() > 0) {
+          await element.click({ timeout: 5000 });
+          return true;
+        }
+      } catch (e) {
+        // continue
+      }
     }
+    return false;
+  }
 
-    // Wait for dropdown menu to appear with explicit selector wait
-    console.log('   Waiting for dropdown menu to appear...');
-    try {
-      await page.waitForSelector('.mat-menu-panel, [role="menu"]', {
-        state: 'visible',
-        timeout: 5000
+  async function captureEntityScreenshots({ routeBase, filePrefix, label, createSelectors }) {
+    console.log(`Capturing ${label} list page...`);
+    await page.goto(`http://localhost:4200/${routeBase}`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    await page.screenshot({
+      path: path.join(imagesDir, `${filePrefix}-list-page.png`),
+      fullPage: true,
+    });
+    console.log(`   Saved: ${filePrefix}-list-page.png`);
+
+    console.log(`Capturing ${label} search and filtering UI...`);
+    await page.screenshot({
+      path: path.join(imagesDir, `${filePrefix}-search-filtering-ui.png`),
+      fullPage: true,
+    });
+    console.log(`   Saved: ${filePrefix}-search-filtering-ui.png`);
+
+    console.log(`Capturing ${label} CRUD operations overview...`);
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: path.join(imagesDir, `${filePrefix}-crud-operations.png`),
+      fullPage: true,
+    });
+    console.log(`   Saved: ${filePrefix}-crud-operations.png`);
+
+    console.log(`Capturing create ${label} form...`);
+    const createClicked = await clickFirstAvailable(createSelectors);
+    if (!createClicked) {
+      await page.goto(`http://localhost:4200/${routeBase}/create`, { waitUntil: 'networkidle', timeout: 30000 });
+    } else {
+      await page.waitForURL(`**/${routeBase}/create**`, { timeout: 15000 }).catch(async () => {
+        await page.goto(`http://localhost:4200/${routeBase}/create`, { waitUntil: 'networkidle', timeout: 30000 });
       });
-      console.log('   Dropdown menu is visible');
-    } catch (e) {
-      console.log('   ⚠️  Dropdown menu selector not found, waiting 2 seconds...');
-      await page.waitForTimeout(2000);
     }
 
-    // Additional wait to ensure menu is fully rendered
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: path.join(imagesDir, `${filePrefix}-form.png`),
+      fullPage: true,
+    });
+    console.log(`   Saved: ${filePrefix}-form.png\n`);
+  }
 
+  try {
+    console.log('Capturing Angular application screenshots...\n');
+
+    console.log('1) Capturing anonymous dashboard before login...');
+    await page.goto('http://localhost:4200/dashboard', { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    await page.screenshot({
+      path: path.join(imagesDir, 'application-dashboard-anonymous.png'),
+      fullPage: false,
+    });
+    console.log('   Saved: application-dashboard-anonymous.png\n');
+
+    console.log('2) Capturing user menu with login link...');
+    const menuOpenedBeforeLogin = await openUserMenu();
+    if (!menuOpenedBeforeLogin) {
+      throw new Error('Could not open user menu before login.');
+    }
     await page.screenshot({
       path: path.join(imagesDir, 'angular-login-page.png'),
       fullPage: false,
     });
-    console.log('   ✅ Saved: angular-login-page.png\n');
+    console.log('   Saved: angular-login-page.png\n');
 
-    // 2. Navigate to login page (which will redirect to IdentityServer)
-    console.log('2️⃣  Navigating to login page...');
+    console.log('3) Logging in via IdentityServer...');
+    let loginClicked = await clickFirstAvailable([
+      '[role="menuitem"]:has-text("Login")',
+      '[role="menuitem"]:has-text("Sign in")',
+      'button:has-text("Login")',
+      'a:has-text("Login")',
+      'a[href*="/login"]',
+    ]);
 
-    // Navigate to login page which triggers auto-redirect to IdentityServer
-    await page.goto('http://localhost:4200/login', { waitUntil: 'load', timeout: 30000 });
-
-    // Wait for redirect to IdentityServer
-    try {
-      await page.waitForURL('**/Account/Login**', { timeout: 15000 });
-      console.log('   Redirected to IdentityServer');
-    } catch (e) {
-      console.log('   Taking longer to redirect, checking URL...');
-      const currentUrl = page.url();
-      if (!currentUrl.includes('44310')) {
-        console.log('   Not on IdentityServer yet, waiting more...');
-        await page.waitForTimeout(3000);
+    if (!loginClicked) {
+      const menuReopened = await openUserMenu();
+      if (menuReopened) {
+        loginClicked = await clickFirstAvailable([
+          '[role="menuitem"]:has-text("Login")',
+          '[role="menuitem"]:has-text("Sign in")',
+          'button:has-text("Login")',
+          'a:has-text("Login")',
+          'a[href*="/login"]',
+        ]);
       }
     }
 
-    await page.waitForTimeout(2000);
+    if (!loginClicked) {
+      throw new Error('Could not click Login from Angular user menu.');
+    }
 
-    // Fill in Angular user credentials for screenshot
+    await page.waitForURL('**://localhost:44310/**', { timeout: 30000 });
+    await page.waitForTimeout(1200);
+
     await page.fill('input[name="Username"], input[name="username"], input#Username', 'ashtyn1');
     await page.fill('input[name="Password"], input[name="password"], input#Password', 'Pa$$word123');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
 
-    // Capture IdentityServer login page with credentials filled
-    console.log('   Capturing IdentityServer login with ashtyn1 credentials...');
     await page.screenshot({
       path: path.join(imagesDir, 'identityserver-login-ashtyn1.png'),
       fullPage: false,
     });
-    console.log('   ✅ Saved: identityserver-login-ashtyn1.png\n');
+    console.log('   Saved: identityserver-login-ashtyn1.png');
 
-    // 3. Now submit the login
-    console.log('3️⃣  Logging in with Angular account (ashtyn1)...');
+    await clickFirstAvailable([
+      'button[type="submit"]',
+      'button:has-text("Login")',
+      'input[type="submit"]',
+    ]);
 
-    // Click login button
-    await page.click('button[type="submit"], button:has-text("Login"), input[type="submit"]');
+    await page.waitForURL('http://localhost:4200/**', { timeout: 30000 }).catch(async () => {
+      await page.goto('http://localhost:4200/dashboard', { waitUntil: 'networkidle', timeout: 30000 });
+    });
+    await page.waitForTimeout(1500);
+    console.log('   Logged in successfully\n');
 
-    // Wait for redirect back to Angular
-    console.log('   Waiting for redirect back to Angular...');
-    try {
-      await page.waitForURL('http://localhost:4200/**', { timeout: 30000 });
-    } catch (e) {
-      console.log('   Redirect taking longer, trying to navigate manually...');
-      await page.goto('http://localhost:4200', { waitUntil: 'networkidle', timeout: 30000 });
+    console.log('4) Capturing profile page from user menu...');
+    const profileMenuOpened = await openUserMenu();
+    if (!profileMenuOpened) {
+      throw new Error('Could not open user menu to navigate to profile page.');
     }
-    await page.waitForTimeout(5000);
-    console.log('   ✅ Logged in successfully\n');
 
-    // 4. Application Dashboard
-    console.log('4️⃣  Capturing application dashboard...');
+    const profileClicked = await clickFirstAvailable([
+      '[role="menuitem"]:has-text("Profile")',
+      '[role="menuitem"]:has-text("Overview")',
+      'a:has-text("Profile")',
+      'button:has-text("Profile")',
+      'a[href*="/profile"]',
+    ]);
+
+    if (!profileClicked) {
+      throw new Error('Could not click Profile from user menu.');
+    }
+
+    await page.waitForURL('**/profile/**', { timeout: 15000 }).catch(async () => {
+      await page.goto('http://localhost:4200/profile/overview', { waitUntil: 'networkidle', timeout: 30000 });
+    });
+    await page.waitForTimeout(1200);
     await page.screenshot({
-      path: path.join(imagesDir, 'application-dashboard.png'),
+      path: path.join(imagesDir, 'profile-overview-page.png'),
+      fullPage: true,
+    });
+    console.log('   Saved: profile-overview-page.png\n');
+
+    console.log('5) Capturing entity pages for Employee, Department, Position, and Salary Range...');
+    await captureEntityScreenshots({
+      routeBase: 'employees',
+      filePrefix: 'employee',
+      label: 'employee',
+      createSelectors: [
+        'a:has-text("Create")',
+        'button:has-text("Create")',
+        'a:has-text("Add Employee")',
+        'button:has-text("Add Employee")',
+        'a[href*="/employees/create"]',
+        'button[routerlink*="/employees/create"]',
+      ],
+    });
+
+    await captureEntityScreenshots({
+      routeBase: 'departments',
+      filePrefix: 'department',
+      label: 'department',
+      createSelectors: [
+        'a:has-text("Create")',
+        'button:has-text("Create")',
+        'a:has-text("Add Department")',
+        'button:has-text("Add Department")',
+        'a[href*="/departments/create"]',
+        'button[routerlink*="/departments/create"]',
+      ],
+    });
+
+    await captureEntityScreenshots({
+      routeBase: 'positions',
+      filePrefix: 'position',
+      label: 'position',
+      createSelectors: [
+        'a:has-text("Create")',
+        'button:has-text("Create")',
+        'a:has-text("Add Position")',
+        'button:has-text("Add Position")',
+        'a[href*="/positions/create"]',
+        'button[routerlink*="/positions/create"]',
+      ],
+    });
+
+    await captureEntityScreenshots({
+      routeBase: 'salary-ranges',
+      filePrefix: 'salary-range',
+      label: 'salary range',
+      createSelectors: [
+        'a:has-text("Create")',
+        'button:has-text("Create")',
+        'a:has-text("Add Salary Range")',
+        'button:has-text("Add Salary Range")',
+        'a[href*="/salary-ranges/create"]',
+        'button[routerlink*="/salary-ranges/create"]',
+      ],
+    });
+
+    console.log('6) Capturing user menu with logout link...');
+    await page.goto('http://localhost:4200/dashboard', { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1000);
+    const menuOpenedAfterLogin = await openUserMenu();
+    if (!menuOpenedAfterLogin) {
+      throw new Error('Could not open user menu after login.');
+    }
+
+    await page.screenshot({
+      path: path.join(imagesDir, 'user-menu-logout-link.png'),
       fullPage: false,
     });
-    console.log('   ✅ Saved: application-dashboard.png\n');
+    console.log('   Saved: user-menu-logout-link.png');
 
-    // 5. Navigate to Employees page
-    console.log('5️⃣  Navigating to Employees page...');
-    await page.goto('http://localhost:4200/employees', { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForTimeout(3000);
-    console.log('   Capturing employee list page...');
+    const logoutClicked = await clickFirstAvailable([
+      '[role="menuitem"]:has-text("Logout")',
+      '[role="menuitem"]:has-text("Log out")',
+      'button:has-text("Logout")',
+      'a:has-text("Logout")',
+      'a[href*="logout" i]',
+    ]);
+
+    if (!logoutClicked) {
+      throw new Error('Could not click Logout menu item.');
+    }
+
+    await page.waitForTimeout(1200);
     await page.screenshot({
-      path: path.join(imagesDir, 'employee-list-page.png'),
+      path: path.join(imagesDir, 'identityserver-logout-intermediate.png'),
       fullPage: true,
     });
-    console.log('   ✅ Saved: employee-list-page.png\n');
+    console.log(`   Saved: identityserver-logout-intermediate.png (URL: ${page.url()})`);
 
-    // 6. Search and Filtering UI
-    console.log('6️⃣  Capturing search and filtering UI...');
-    await page.screenshot({
-      path: path.join(imagesDir, 'search-filtering-ui.png'),
-      fullPage: true,
-    });
-    console.log('   ✅ Saved: search-filtering-ui.png\n');
+    const hereClicked = await clickFirstAvailable([
+      'a:has-text("Click Here")',
+      'a:has-text("here")',
+      'a:has-text("click here")',
+      'form button[type="submit"]',
+      'form input[type="submit"]',
+    ]);
 
-    // 7. Navigate to Create Employee form
-    console.log('7️⃣  Navigating to Create Employee form...');
-    await page.goto('http://localhost:4200/employees/create', { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForTimeout(2000);
-    console.log('   Capturing employee form...');
-    await page.screenshot({
-      path: path.join(imagesDir, 'employee-form.png'),
-      fullPage: true,
-    });
-    console.log('   ✅ Saved: employee-form.png\n');
+    if (hereClicked) {
+      await page.waitForURL('http://localhost:4200/**', { timeout: 30000 }).catch(async () => {
+        await page.goto('http://localhost:4200', { waitUntil: 'networkidle', timeout: 30000 });
+      });
+      console.log('   Clicked Here and redirected back to Angular.\n');
+    } else {
+      console.log('   Could not find Click Here link/button on logout page.\n');
+    }
 
-    // 8. CRUD Operations (back to list)
-    console.log('8️⃣  Capturing CRUD operations overview...');
-    await page.goto('http://localhost:4200/employees', { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForTimeout(2000);
-    await page.screenshot({
-      path: path.join(imagesDir, 'crud-operations.png'),
-      fullPage: true,
-    });
-    console.log('   ✅ Saved: crud-operations.png\n');
-
-    console.log('✨ All Angular screenshots captured successfully!');
-    console.log(`📁 Screenshots saved to: ${imagesDir}\n`);
-
+    console.log('Angular screenshot flow completed successfully.');
+    console.log(`Screenshots saved to: ${imagesDir}\n`);
   } catch (error) {
-    console.error('❌ Error taking screenshots:', error.message);
+    console.error('Error taking screenshots:', error.message);
     console.error('\nStack trace:', error.stack);
   } finally {
     await browser.close();

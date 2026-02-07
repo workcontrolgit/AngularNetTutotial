@@ -233,10 +233,14 @@ npm start
 1. Navigate to **http://localhost:4200**
 2. Click **"Sign In"**
 3. You'll be redirected to IdentityServer (https://localhost:44310)
-4. Use default credentials:
-   * **Username:** `alice` or `admin`
-   * **Password:** `Pass123$`
+4. Use test credentials:
+   * **Username:** `ashtyn1`
+   * **Password:** `Pa$$word123`
 5. After successful login, you'll be redirected back to the Angular dashboard
+
+**Note:** For IdentityServer Admin UI (https://localhost:44303), use:
+   * **Username:** `admin`
+   * **Password:** `Pa$$word123`
 
 ### Common Issues
 
@@ -556,14 +560,15 @@ dotnet test
 {
   "Users": [
     {
-      "Username": "alice",
-      "Email": "alice@example.com",
-      "Password": "Pass123$",
-      "Roles": ["Admin"],
+      "Username": "ashtyn1",
+      "Email": "ashtyn1@example.com",
+      "Password": "Pa$$word123",
+      "Roles": ["HRAdmin", "Manager"],
       "Claims": [
-        { "Type": "name", "Value": "Alice Smith" },
-        { "Type": "email", "Value": "alice@example.com" },
-        { "Type": "role", "Value": "Admin" }
+        { "Type": "name", "Value": "Ashtyn Doe" },
+        { "Type": "email", "Value": "ashtyn1@example.com" },
+        { "Type": "role", "Value": "HRAdmin" },
+        { "Type": "role", "Value": "Manager" }
       ]
     }
   ]
@@ -734,9 +739,10 @@ This tutorial is divided into 6 parts:
 ### 1. Explore the Running Application
 
 **Try these actions:**
-* Log in with test credentials (`alice` / `Pass123$`)
+* Log in with test credentials (`ashtyn1` / `Pa$$word123`)
 * Navigate through the dashboard
 * View and manage employees
+* Access IdentityServer Admin UI with admin credentials (`admin` / `Pa$$word123`)
 * Create, edit, and delete an employee
 * Check the Swagger UI for API documentation
 * Inspect network requests in browser DevTools (note the Bearer token)

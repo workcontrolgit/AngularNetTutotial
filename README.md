@@ -88,6 +88,17 @@ npm start
 
 **URL**: `http://localhost:4200`
 
+### Test Credentials
+
+**Angular Application User:**
+- **Username:** `ashtyn1`
+- **Password:** `Pa$$word123`
+
+**IdentityServer Admin UI:**
+- **Username:** `admin`
+- **Password:** `Pa$$word123`
+- **URL:** `https://localhost:44303`
+
 ## Application URLs
 
 | Component | URL | Description |

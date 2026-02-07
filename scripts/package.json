@@ -1,0 +1,14 @@
+{
+  "name": "tutorial-screenshots",
+  "version": "1.0.0",
+  "description": "Playwright scripts for capturing tutorial screenshots",
+  "scripts": {
+    "screenshots:angular": "node capture-angular.js",
+    "screenshots:webapi": "node capture-webapi.js",
+    "screenshots:identityserver": "node capture-identityserver.js",
+    "screenshots:all": "npm run screenshots:angular && npm run screenshots:webapi && npm run screenshots:identityserver"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

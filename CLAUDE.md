@@ -236,9 +236,13 @@ Common issue: **CORS errors**
 1. Start all three services
 2. Navigate to `http://localhost:4200`
 3. Click login → should redirect to IdentityServer
-4. Login with test credentials
+4. Login with test credentials (`ashtyn1` / `Pa$$word123`)
 5. Should redirect back to Angular dashboard
 6. API calls should work (check Network tab for 200 responses with Bearer token)
+
+**Admin UI Access:**
+- URL: https://localhost:44303
+- Credentials: `admin` / `Pa$$word123`
 
 ---
 

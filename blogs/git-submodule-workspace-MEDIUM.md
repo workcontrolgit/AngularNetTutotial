@@ -58,11 +58,155 @@ Think of it like this: Your main repository becomes a "project workspace" that r
 **Key benefits for developer productivity:**
 
 * ✅ **Single clone, instant setup** — New developers get the entire working stack with one command
-* ✅ **Version alignment** — The parent repo locks specific commits, ensuring API v2.1 always pairs with Frontend v2.1
+* ✅ **Version alignment** — The parent repo locks specific commits, ensuring compatible versions work together
 * ✅ **IDE-friendly structure** — Open one workspace folder and see all your code in the file tree
 * ✅ **Cross-repo refactoring** — Change an API endpoint and update the Angular service call in the same IDE session
 * ✅ **Centralized documentation** — One README at the top level explains how everything fits together
 * ✅ **Integration testing confidence** — You're always testing against the exact versions that deploy together
+
+### 🔒 How Version Alignment Works
+
+**The magic of git submodules: commit-level version locking.**
+
+Traditional multi-repo setups leave version compatibility to documentation and hope. You might have a README that says "Use API v2.1 with Frontend v2.1," but nothing enforces it. Developers can accidentally mix incompatible versions, leading to frustrating bugs.
+
+**Git submodules solve this by storing exact commit references in the parent repository.**
+
+Here's what happens under the hood:
+
+**1. Parent repo tracks specific commits (not branches)**
+
+```bash
+# Inside AngularNetTutorial/.gitmodules
+[submodule "Clients/TalentManagement-Angular-Material"]
+    path = Clients/TalentManagement-Angular-Material
+    url = https://github.com/yourorg/angular-client.git
+
+[submodule "ApiResources/TalentManagement-API"]
+    path = ApiResources/TalentManagement-API
+    url = https://github.com/yourorg/dotnet-api.git
+```
+
+The parent repo's git metadata stores the exact commit SHA for each submodule:
+
+```bash
+# Parent repo internally tracks:
+Clients/TalentManagement-Angular-Material → commit abc123def456
+ApiResources/TalentManagement-API        → commit 789ghi012jkl
+TokenService/Duende-IdentityServer       → commit 345mno678pqr
+```
+
+**2. When you clone, you get those exact commits**
+
+```bash
+git clone --recurse-submodules https://github.com/yourorg/AngularNetTutorial.git
+```
+
+This command:
+- Clones the parent repository
+- Reads the submodule commit references
+- Checks out each submodule at the exact commit the parent expects
+
+**Result:** Everyone on your team gets **identical code** across all three repositories.
+
+**3. When you update a submodule, you update the parent's reference**
+
+Let's say you add a new API endpoint:
+
+```bash
+# Step 1: Make changes in the API submodule
+cd ApiResources/TalentManagement-API
+git checkout develop
+# ... make your changes ...
+git commit -m "Add employee reports endpoint"
+git push
+# API is now at commit new789abc
+
+# Step 2: Update parent repo's reference
+cd ../..
+git add ApiResources/TalentManagement-API
+git commit -m "Update API submodule to include reports endpoint"
+git push
+```
+
+**What just happened?** The parent repo now points to `new789abc` instead of `789ghi012jkl`. When your teammate pulls, they get the updated API automatically.
+
+**4. Version compatibility is enforced by the parent repo**
+
+If your teammate works on the Angular frontend to consume the new reports endpoint:
+
+```bash
+cd Clients/TalentManagement-Angular-Material
+git checkout develop
+# ... add ReportsComponent and service calls ...
+git commit -m "Add reports UI to display employee reports"
+git push
+# Angular is now at commit new456def
+
+cd ../..
+git add Clients/TalentManagement-Angular-Material
+git commit -m "Update Angular submodule to include reports UI"
+git push
+```
+
+**Now the parent repo guarantees:**
+- API commit `new789abc` (has reports endpoint)
+- Angular commit `new456def` (has reports UI)
+- Always work together
+
+**No one can accidentally deploy the old API with the new Angular UI.** The parent repo won't let them—the submodule references are version-locked.
+
+**5. Integration testing uses locked versions**
+
+Your CI/CD pipeline clones the parent repo:
+
+```bash
+git clone --recurse-submodules https://github.com/yourorg/AngularNetTutorial.git
+```
+
+The pipeline automatically tests the exact versions that will deploy together. If tests pass, you know the integration is solid.
+
+**Compare to the old way:**
+
+```bash
+# Old way (manual coordination nightmare)
+git clone https://github.com/yourorg/angular-client.git
+git checkout v2.1.0  # Hope this matches the API version
+
+git clone https://github.com/yourorg/dotnet-api.git
+git checkout v2.1.0  # Hope this matches the Angular version
+
+# Oops, Angular v2.1.0 actually needs API v2.1.1
+# Spend 30 minutes debugging 404 errors
+```
+
+**With submodules:**
+
+```bash
+# New way (guaranteed compatibility)
+git clone --recurse-submodules https://github.com/yourorg/AngularNetTutorial.git
+# Done. Everything works together.
+```
+
+**Real-world example from the tutorial:**
+
+The parent repo locks these specific commits:
+
+```bash
+git submodule status
+# abc1234 Clients/TalentManagement-Angular-Material (v1.2.3)
+# def5678 ApiResources/TalentManagement-API (v1.2.1)
+# ghi9012 TokenService/Duende-IdentityServer (v7.0.2)
+```
+
+These versions are tested together. They're deployed together. They're guaranteed to work together.
+
+**When version alignment matters most:**
+
+* **Breaking API changes** — Frontend expects `/api/v2/employees`, but old API only has `/api/employees`
+* **Authentication protocol updates** — Angular uses PKCE flow, but old IdentityServer doesn't support it
+* **Database schema migrations** — API expects `employees.department_id`, but old schema has `employees.dept`
+* **Dependency version bumps** — Angular 19 isn't compatible with old API's .NET 8 libraries
 
 ## 🚀 How It Works: The CAT Pattern with Submodules
 

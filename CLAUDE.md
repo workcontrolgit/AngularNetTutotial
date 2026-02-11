@@ -16,13 +16,15 @@ This is a **tutorial repository** demonstrating the **CAT (Client, API Resource,
 AngularNetTutorial/
 ├── Clients/TalentManagement-Angular-Material/     # Git submodule
 ├── ApiResources/TalentManagement-API/             # Git submodule
-└── TokenService/Duende-IdentityServer/            # Git submodule
+├── TokenService/Duende-IdentityServer/            # Git submodule
+└── Tests/AngularNetTutorial-Playwright/           # Git submodule
 ```
 
 Each folder is a **git submodule** pointing to its own repository:
 - `Clients/`: Angular 20 + Material Design client (ng-matero template)
 - `ApiResources/`: .NET 10 Web API with Clean Architecture
 - `TokenService/`: Duende IdentityServer 7.0 for OAuth 2.0/OIDC
+- `Tests/`: Playwright end-to-end testing framework for integration testing
 
 ### Authentication Flow
 
@@ -56,6 +58,32 @@ npm start
 - IdentityServer: `https://localhost:44310`
 - IdentityServer Admin: `https://localhost:44303`
 - IdentityServer Admin API: `https://localhost:44302`
+
+## Running End-to-End Tests
+
+**Playwright tests require all services to be running first.**
+
+```bash
+# Ensure all services are running (see above)
+# Then run Playwright tests in a new terminal
+
+# Terminal 4: Playwright Tests
+cd Tests/AngularNetTutorial-Playwright
+npm install
+npx playwright test
+
+# Run tests in UI mode for debugging
+npx playwright test --ui
+
+# Run specific test file
+npx playwright test tests/auth.spec.ts
+```
+
+**Test Coverage:**
+- Authentication flows (login, logout, token refresh)
+- API integration (CRUD operations with proper authorization)
+- UI workflows (navigation, forms, data display)
+- Cross-browser compatibility (Chromium, Firefox, WebKit)
 
 ## Working with Git Submodules
 
